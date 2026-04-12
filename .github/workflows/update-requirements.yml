@@ -10,6 +10,10 @@ on:
 jobs:
   update-requirements:
     runs-on: ubuntu-latest
+    # Run every step inside the same devcontainer image used locally, so the
+    # OS, Python build, and system libraries match your Docker dev environment.
+    container:
+      image: mcr.microsoft.com/devcontainers/python:3.11
     permissions:
       contents: write
       pull-requests: write
@@ -19,18 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
+      # actions/setup-python is not needed — the container already has Python 3.11.
+      # Cache key includes 'devcontainer' to avoid collisions with any old ubuntu runner caches.
       - name: Cache pip packages
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.in') }}
+          key: ${{ runner.os }}-devcontainer-pip-${{ hashFiles('requirements.in') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-devcontainer-pip-
+
+      - name: Pin pip version
+        run: pip install "pip<26"
 
       - name: Install build tools
         run: pip install pip-tools pipdeptree
