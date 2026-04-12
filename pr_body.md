@@ -1,4 +1,4 @@
-Automated update to requirements files following changes to `requirements.in` in commit 4095a8d68d5b3ee45532eb419cd2bd95a6fb98e4.
+Automated update to requirements files following changes to `requirements.in` in commit ab061d5e78115359129b487f837669063415acb8.
 
 **Files updated:**
 - `detailed_requirements.txt` — full pinned dependency graph (pip-compile output)
@@ -18,11 +18,14 @@ Transitive packages in `requirements.in` that pip-compile can no longer trace to
 
 ```
 Orphan candidates — in 'Transitive Libraries' of requirements.in but pip-compile cannot trace them to any upstream package:
-  - cachetools
   - pysocks
+    Suggestion: POSSIBLY NEEDED — imported at runtime by: httpcore, httpx, pip, urllib3
+    Action: add '# runtime-override: imported by httpcore at runtime' to requirements.in
   - toposort
+    Suggestion: SAFE TO REMOVE — no installed package imports it
+    Action: remove from requirements.in
 
-Consider removing them from requirements.in or adding '# runtime-override: <reason>' if they are needed at runtime.
+Packages marked 'SAFE TO REMOVE' can be deleted from requirements.in. Packages marked 'POSSIBLY NEEDED' should be tagged with '# runtime-override: <reason>' to suppress this warning.
 ```
 
 </details>
@@ -70,7 +73,7 @@ tests/smoke/test_kedro_pipeline.py::test_kedro_core_imports PASSED       [ 33%]
 tests/smoke/test_kedro_pipeline.py::test_kedro_azureml_imports PASSED    [ 66%]
 tests/smoke/test_kedro_pipeline.py::test_pipeline_runs_locally PASSED    [100%]
 
-============================== 3 passed in 0.64s ===============================
+============================== 3 passed in 0.63s ===============================
 ```
 
 </details>
