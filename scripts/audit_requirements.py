@@ -1,0 +1,287 @@
+#!/usr/bin/env python3
+"""
+Audit requirements files and produce two reports:
+
+1. ORPHAN CANDIDATES
+   Packages listed in the "Transitive Libraries" sections of requirements.in
+   whose only pip-compile attribution is "# via -r requirements.in" — meaning
+   no upstream package declares them as a dependency any more.  These are
+   candidates for removal to slim the Docker image.
+
+   Packages annotated with "# runtime-override:" are excluded; that tag
+   signals a package that is genuinely needed at runtime but not visible to
+   pip-compile (e.g. an undeclared runtime dependency of a third-party lib).
+
+2. NEW / UNTRACKED PACKAGES
+   Packages that pip-compile resolved into detailed_requirements.txt but that
+   are not listed anywhere in requirements.in.  A sub-set is highlighted as
+   "newly appeared" — packages not present in the previous committed version
+   of detailed_requirements.txt (passed as --old-detailed).
+
+Usage:
+    python scripts/audit_requirements.py \\
+        --detailed  detailed_requirements.txt \\
+        --req-in    requirements.in \\
+        [--old-detailed detailed_requirements_old.txt] \\
+        --orphan-out   orphan_report.txt \\
+        --new-pkg-out  new_packages_report.txt
+"""
+
+import argparse
+import re
+import sys
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _norm(name: str) -> str:
+    """Canonicalise a package name: lowercase, underscores → hyphens."""
+    return re.sub(r"[_.]", "-", name.strip().lower())
+
+
+def parse_detailed(path: str) -> dict[str, str]:
+    """
+    Parse a pip-compile output file.
+
+    Returns {normalised_name: raw_via_block} for every package.
+    The via block is the indented comment that follows the version line,
+    e.g. "    # via -r requirements.in".
+    """
+    packages: dict[str, str] = {}
+    with open(path) as f:
+        content = f.read()
+
+    # Each entry looks like:
+    #   pkgname[extras]==version
+    #       # via
+    #       #   upstream-pkg
+    # or the compact form:
+    #   pkgname==version
+    #       # via -r requirements.in
+    block_re = re.compile(
+        r"^([A-Za-z0-9][\w.\-]*(?:\[[^\]]*\])?)==[^\n]+\n((?:[ \t]+#[^\n]*\n?)*)",
+        re.MULTILINE,
+    )
+    for m in block_re.finditer(content):
+        raw_name = re.sub(r"\[.*\]", "", m.group(1))
+        via_block = m.group(2)
+        packages[_norm(raw_name)] = via_block
+    return packages
+
+
+def parse_req_in(path: str) -> tuple[set[str], set[str], dict[str, bool]]:
+    """
+    Parse requirements.in.
+
+    Returns:
+        base_pkgs      – normalised names in the Base Libraries section
+        transitive_pkgs – normalised names in the Transitive Libraries sections
+        overrides       – {name: True} for packages marked # runtime-override:
+    """
+    base_pkgs: set[str] = set()
+    transitive_pkgs: set[str] = set()
+    overrides: dict[str, bool] = {}
+
+    section = "base"          # start before any header
+    current_pkg: str | None = None
+    is_override = False
+
+    with open(path) as f:
+        lines = f.readlines()
+
+    def _save_current():
+        nonlocal current_pkg, is_override
+        if current_pkg is None:
+            return
+        if section == "transitive":
+            transitive_pkgs.add(current_pkg)
+            if is_override:
+                overrides[current_pkg] = True
+        else:
+            base_pkgs.add(current_pkg)
+        current_pkg = None
+        is_override = False
+
+    for line in lines:
+        stripped = line.rstrip()
+
+        # Section header detection
+        upper = stripped.upper()
+        if "BASE LIBRARIES" in upper:
+            _save_current()
+            section = "base"
+            continue
+        if "TRANSITIVE" in upper:
+            _save_current()
+            section = "transitive"
+            continue
+
+        # Skip pure comment / blank lines that aren't package annotations
+        if not stripped or (stripped.lstrip().startswith("#") and not stripped[0].isalpha()):
+            # Could be an annotation for current_pkg
+            if current_pkg and "runtime-override" in stripped.lower():
+                is_override = True
+            continue
+
+        # Package line: starts with a letter (not indented)
+        if stripped[0].isalpha() or stripped[0].isdigit():
+            _save_current()
+            raw = re.split(r"[=\[]", stripped)[0].strip()
+            current_pkg = _norm(raw)
+            is_override = False
+        elif stripped.startswith(" ") and current_pkg:
+            # Indented annotation line for the current package
+            if "runtime-override" in stripped.lower():
+                is_override = True
+
+    _save_current()
+    return base_pkgs, transitive_pkgs, overrides
+
+
+# ---------------------------------------------------------------------------
+# Audit 1: Orphan candidates
+# ---------------------------------------------------------------------------
+
+def find_orphans(
+    detailed: dict[str, str],
+    transitive_pkgs: set[str],
+    overrides: dict[str, bool],
+) -> list[str]:
+    """
+    Return transitive packages that pip-compile attributes only to
+    '-r requirements.in' and that are not marked runtime-override.
+    """
+    orphans = []
+    for pkg in transitive_pkgs:
+        if pkg not in detailed:
+            continue
+        via = detailed[pkg]
+        # After the sed strip, a package with ONLY -r requirements.in as its
+        # source shows the compact single-line form:  "    # via -r requirements.in"
+        if "via -r requirements.in" in via and "via\n" not in via:
+            if not overrides.get(pkg):
+                orphans.append(pkg)
+    return sorted(orphans)
+
+
+# ---------------------------------------------------------------------------
+# Audit 2: New / untracked packages
+# ---------------------------------------------------------------------------
+
+def find_new_packages(
+    detailed: dict[str, str],
+    base_pkgs: set[str],
+    transitive_pkgs: set[str],
+    old_detailed: dict[str, str] | None,
+) -> tuple[list[str], list[str]]:
+    """
+    Return:
+        untracked   – packages in detailed but absent from requirements.in
+        newly_added – subset of untracked that were also absent from old_detailed
+                      (i.e. they appeared for the first time in this compile run)
+    """
+    all_req_in = base_pkgs | transitive_pkgs
+    untracked = sorted(p for p in detailed if p not in all_req_in)
+
+    if old_detailed is not None:
+        newly_added = sorted(p for p in untracked if p not in old_detailed)
+    else:
+        newly_added = []
+
+    return untracked, newly_added
+
+
+# ---------------------------------------------------------------------------
+# Report formatting
+# ---------------------------------------------------------------------------
+
+def write_orphan_report(orphans: list[str], out_path: str) -> None:
+    lines: list[str] = []
+    if not orphans:
+        lines.append("No orphan candidates found.")
+    else:
+        lines.append(
+            "Orphan candidates — in 'Transitive Libraries' of requirements.in but "
+            "pip-compile cannot trace them to any upstream package:"
+        )
+        for p in orphans:
+            lines.append(f"  - {p}")
+        lines.append("")
+        lines.append(
+            "Consider removing them from requirements.in or adding "
+            "'# runtime-override: <reason>' if they are needed at runtime."
+        )
+    with open(out_path, "w") as f:
+        f.write("\n".join(lines) + "\n")
+
+
+def write_new_pkg_report(
+    untracked: list[str],
+    newly_added: list[str],
+    out_path: str,
+) -> None:
+    lines: list[str] = []
+    if not untracked:
+        lines.append("All resolved packages are already listed in requirements.in.")
+    else:
+        lines.append(
+            f"{len(untracked)} package(s) resolved by pip-compile are not listed "
+            "in requirements.in:"
+        )
+        for p in untracked:
+            tag = " *** NEW THIS RUN ***" if p in newly_added else ""
+            lines.append(f"  - {p}{tag}")
+        lines.append("")
+        lines.append(
+            "Add them to the appropriate 'Transitive Libraries' section of "
+            "requirements.in to make the dependency explicit."
+        )
+        if newly_added:
+            lines.append("")
+            lines.append(
+                f"Packages marked '*** NEW THIS RUN ***' ({len(newly_added)}) "
+                "were not present in the previous compiled output."
+            )
+    with open(out_path, "w") as f:
+        f.write("\n".join(lines) + "\n")
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--detailed", default="detailed_requirements.txt")
+    parser.add_argument("--req-in", default="requirements.in")
+    parser.add_argument("--old-detailed", default=None)
+    parser.add_argument("--orphan-out", default="orphan_report.txt")
+    parser.add_argument("--new-pkg-out", default="new_packages_report.txt")
+    args = parser.parse_args()
+
+    detailed = parse_detailed(args.detailed)
+    base_pkgs, transitive_pkgs, overrides = parse_req_in(args.req_in)
+    old_detailed = parse_detailed(args.old_detailed) if args.old_detailed else None
+
+    orphans = find_orphans(detailed, transitive_pkgs, overrides)
+    untracked, newly_added = find_new_packages(
+        detailed, base_pkgs, transitive_pkgs, old_detailed
+    )
+
+    write_orphan_report(orphans, args.orphan_out)
+    write_new_pkg_report(untracked, newly_added, args.new_pkg_out)
+
+    # Print summaries to stdout for CI logs
+    print(f"Orphan candidates: {len(orphans)}")
+    print(f"Untracked packages: {len(untracked)} ({len(newly_added)} new this run)")
+
+    # Exit non-zero only when there are genuinely new packages this run,
+    # so CI surfaces the report clearly without blocking on pre-existing gaps.
+    if newly_added:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

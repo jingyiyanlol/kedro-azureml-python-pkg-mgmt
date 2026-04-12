@@ -39,6 +39,12 @@ jobs:
       - name: Install build tools
         run: pip install pip-tools pipdeptree
 
+      # ── 0. Snapshot old detailed_requirements.txt for new-package diffing ────
+      - name: Save previous detailed_requirements.txt
+        run: |
+          git show HEAD:detailed_requirements.txt > detailed_requirements_old.txt 2>/dev/null \
+            || touch detailed_requirements_old.txt
+
       # ── 1. Compile ────────────────────────────────────────────────────────────
       - name: Run pip-compile
         id: pip_compile
@@ -93,9 +99,31 @@ jobs:
             | sed 's/\[[^]]*\]//g' \
             > requirements.txt
 
+      # ── 3. Audit ──────────────────────────────────────────────────────────────
+      - name: Run requirements audit
+        id: audit
+        run: |
+          python scripts/audit_requirements.py \
+            --detailed  detailed_requirements.txt \
+            --req-in    requirements.in \
+            --old-detailed detailed_requirements_old.txt \
+            --orphan-out   orphan_report.txt \
+            --new-pkg-out  new_packages_report.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      # ── 4. Install + smoke test ───────────────────────────────────────────────
       - name: Install compiled packages
         run: pip install -r requirements.txt
 
+      - name: Run kedro smoke tests
+        id: smoke_test
+        run: |
+          pytest tests/smoke/ -v 2>&1 | tee smoke_test_output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      # ── 5. Reverse dependency tree ────────────────────────────────────────────
       - name: Generate reverse_dependency.txt
         run: |
           grep -v "^#" requirements.txt \
@@ -105,7 +133,18 @@ jobs:
                 'echo "=== {} ===" && pipdeptree --reverse --packages {} 2>/dev/null && echo ""' \
             > reverse_dependency.txt
 
-      # ── 3. Open PR ────────────────────────────────────────────────────────────
+      # ── 6. Assemble PR body ───────────────────────────────────────────────────
+      - name: Generate PR body
+        run: |
+          python scripts/generate_pr_body.py \
+            --sha           "${{ github.sha }}" \
+            --orphan-report orphan_report.txt \
+            --new-pkg-report new_packages_report.txt \
+            --smoke-output  smoke_test_output.txt \
+            --smoke-exit    "${{ steps.smoke_test.outputs.exit_code }}" \
+            --out           pr_body.md
+
+      # ── 7. Open PR ────────────────────────────────────────────────────────────
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
@@ -114,16 +153,7 @@ jobs:
           base: main
           commit-message: "chore: regenerate requirements files"
           title: "chore: update requirements files from requirements.in changes"
-          body: |
-            Automated update to the three generated requirements files following
-            changes to `requirements.in` in commit ${{ github.sha }}.
-
-            **Files updated:**
-            - `detailed_requirements.txt` — full pinned dependency graph (pip-compile output)
-            - `requirements.txt` — flat pinned list (comments and extras stripped)
-            - `reverse_dependency.txt` — reverse dependency tree (pipdeptree output)
-
-            Review the diff to confirm the version changes look correct, then merge.
+          body-path: pr_body.md
           delete-branch: true
           labels: |
             requirements-update
