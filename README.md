@@ -1,43 +1,80 @@
-## How to generate a `requirements.txt`that has no dependency conflict:
-1. In an external environment, use the commands to start a python dev Docker container
-```bash
-docker run --rm -it \
-  --platform linux/amd64 \
-  -v "$(pwd)":/workspace \
-  -w /workspace \
-  mcr.microsoft.com/devcontainers/python:3.11 \
-  /bin/bash
+# Python Package Dependency Management
+
+An experiment using Claude to automate Python package dependency tracing and conflict detection.
+
+## Overview
+
+Managing a large `requirements.in` with hundreds of pinned packages across many ecosystems (Azure ML, Kedro, FastAPI, Jupyter, spaCy, etc.) is tedious and error-prone. This project automates the full dependency tracing workflow using a GitHub Actions bot, so that any change to `requirements.in` automatically produces three derived files and opens a PR for review.
+
+## How it works
+
+```
+requirements.in  ──(push to main)──►  GitHub Actions bot
+                                              │
+                          ┌───────────────────┼───────────────────┐
+                          ▼                   ▼                   ▼
+               detailed_requirements   requirements.txt   reverse_dependency.txt
+                     .txt
+                          └───────────────────┴───────────────────┘
+                                              │
+                                      Opens a PR to review
+                                   (or an Issue on conflict)
 ```
 
-## Install Python packages dependency management tools
-```bash
-pip install pipdeptree
-pip install pip-tools
+### Generated files
+
+| File | Tool | Description |
+|------|------|-------------|
+| `detailed_requirements.txt` | `pip-compile` | Full pinned dependency graph — shows which package pulled in each dependency |
+| `requirements.txt` | derived from above | Flat pinned list, comments and extras (e.g. `[parquet]`) stripped — ready to `pip install` |
+| `reverse_dependency.txt` | `pipdeptree --reverse` | For each package, shows which other packages depend on it — useful for understanding blast radius of an upgrade |
+
+### Conflict detection
+
+If `pip-compile` cannot resolve the dependencies (version conflict), the workflow:
+- Does **not** create a PR
+- Opens a GitHub Issue titled `⚠️ Requirements conflict detected` with the full error output
+- Fails the workflow run visibly in CI
+
+## Repository structure
+
 ```
-Note: ensure pip version is <26 to be compatible with pip-tools
+.
+├── requirements.in                        # Source of truth — edit this
+├── detailed_requirements.txt              # Generated: full dependency graph
+├── requirements.txt                       # Generated: flat pinned list
+├── reverse_dependency.txt                 # Generated: reverse dependency tree
+├── pipdeptree_reverse.sh                  # Local script to regenerate all three files
+└── .github/
+    └── workflows/
+        └── update-requirements.yml        # GitHub Actions workflow
+```
 
-2. Prepare the `requirements.in` that we want to test the updates
-3. Run the command to generate the `detailed_requirements.txt` which will show which packages are installed due to what other packages
-    ```bash
-    pip-compile --output-file=detailed_requirements.txt requirements.in
-    ```
-4. Clean away the lines "    #   -r requirements.in"
-    ```bash
-    sed -i '/^    #   -r requirements.in/d' detailed_requirements.txt
-    ```
-5. Pipe only the packages without remarks to a clean `requirements.txt`
-    ```bash
-    grep -v "^[[:space:]]*#" detailed_requirements.txt | grep -v "^[[:space:]]*$" > requirements.txt
-    sed -i 's/\[[^]]*\]//g' requirements.txt
-    ```
-    This way the `.txt` file is clean and can be used to replace the one in this repository to track what has been changed.
+## Running locally
 
-## How to generate the reverse dependency tree file `reverse_dependency.txt`
-
-Using `requirements.txt` as input, find out what is the required version range for each package using pipdeptree
+Prerequisites: Python 3.11, `pip-tools`, `pipdeptree`
 
 ```bash
-cat requirements.txt | grep -v "^#" | grep -v "^$" | cut -d'=' -f1 | xargs -I {} sh -c 'echo "=== {} ===" && pipdeptree --reverse --packages {} 2>/dev/null && echo ""' > reverse_dependency.txt
+pip install pip-tools pipdeptree
+sh pipdeptree_reverse.sh
 ```
-**Note:**
-pipdeptree reverse sometimes not able to pick up what is the parent library, hence we can check the detailed_requirements.txt generated using the pip-tools (pip-compile command) 
+
+> **Tip:** Run inside a Docker container to keep your local environment clean:
+> ```bash
+> docker run --rm -it \
+>   --platform linux/amd64 \
+>   -v "$(pwd)":/workspace \
+>   -w /workspace \
+>   mcr.microsoft.com/devcontainers/python:3.11 \
+>   /bin/bash
+> ```
+> Note: ensure pip version is below 26 for compatibility with `pip-tools`.
+
+## GitHub Actions bot
+
+The workflow (`.github/workflows/update-requirements.yml`) triggers on any push to `main` that changes `requirements.in`.
+
+Required repository permissions (automatically granted via `GITHUB_TOKEN`):
+- `contents: write` — commit generated files to a branch
+- `pull-requests: write` — open the PR
+- `issues: write` — open a conflict Issue
