@@ -157,7 +157,7 @@ build==1.2.1
     #   kedro
 cachetools==5.5.2
     # via
-    #   kedro-azureml
+    #   kedro-azureml # runtime-override: required by kedro-azureml but not captured by pip-compile
 catalogue==2.0.10
     # via
     #   spacy
