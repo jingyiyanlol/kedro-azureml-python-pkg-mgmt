@@ -120,7 +120,8 @@ jobs:
         id: smoke_test
         run: |
           pytest tests/smoke/ -v 2>&1 | tee smoke_test_output.txt
-          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          exit_code=$?
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
         continue-on-error: true
 
       # ── 5. Reverse dependency tree ────────────────────────────────────────────
@@ -141,14 +142,14 @@ jobs:
             --orphan-report orphan_report.txt \
             --new-pkg-report new_packages_report.txt \
             --smoke-output  smoke_test_output.txt \
-            --smoke-exit    "${{ steps.smoke_test.outputs.exit_code }}" \
+            --smoke-exit    "${{ steps.smoke_test.outputs.exit_code || '0' }}" \
             --out           pr_body.md
 
       # ── 7. Open PR ────────────────────────────────────────────────────────────
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.WORKFLOW_PAT }}
           branch: auto/update-requirements
           base: main
           commit-message: "chore: regenerate requirements files"
