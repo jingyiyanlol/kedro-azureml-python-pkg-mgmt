@@ -1,0 +1,6 @@
+Orphan candidates — in 'Transitive Libraries' of requirements.in but pip-compile cannot trace them to any upstream package:
+  - cachetools
+  - pysocks
+  - toposort
+
+Consider removing them from requirements.in or adding '# runtime-override: <reason>' if they are needed at runtime.
