@@ -74,6 +74,10 @@ types-python-dateutil==2.9.0.20250822
 watchgod==0.8.2
     # Simple file watching and code reload
 
+## Test github action
+mlflow==2.4.1
+    # Open source platform for the machine learning lifecycle
+
 
 #####################################
 # Transitive Libraries
@@ -422,7 +426,7 @@ async-lru==2.0.5
     # Simple LRU cache for asyncio
 binaryornot==0.4.4
     # Ultra-lightweight pure Python package to check if a file is binary or text
-cachetools==5.5.2
+#cachetools==5.5.2
     # Extensible memoizing collections and decorators (required by kedro-azureml but not explicit)
 cffi==2.0.0
     # Foreign Function Interface for Python calling C code
