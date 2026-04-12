@@ -1,10 +1,10 @@
 # Python Package Dependency Management
 
-An experiment using Claude to automate Python package dependency tracing and conflict detection.
+An experiment using Claude to help write the automation for Python package dependency tracing and conflict detection for a Kedro Azure ML project.
 
 ## Overview
 
-Managing a large `requirements.in` with hundreds of pinned packages across many ecosystems (Azure ML, Kedro, FastAPI, Jupyter, spaCy, etc.) is tedious and error-prone. This project automates the full dependency tracing workflow using a GitHub Actions bot, so that any change to `requirements.in` automatically produces three derived files, runs audits, and opens a PR for review.
+Managing a large `requirements.in` with hundreds of pinned packages across many ecosystems is tedious and error-prone. This project is mainly used to manage the python dependencies for a typical Kedro Azureml Project's. It automates the full dependency tracing workflow using a GitHub Actions bot, so that any change to `requirements.in` automatically produces three derived files, runs audits, and opens a PR for review.
 
 ## How it works
 
