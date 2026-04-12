@@ -1,0 +1,125 @@
+name: Update Requirements
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - requirements.in
+
+jobs:
+  update-requirements:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.in') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install build tools
+        run: pip install pip-tools pipdeptree
+
+      # ── 1. Compile ────────────────────────────────────────────────────────────
+      - name: Run pip-compile
+        id: pip_compile
+        run: |
+          pip-compile --output-file=detailed_requirements.txt requirements.in \
+            2>&1 | tee pip_compile_output.txt
+        continue-on-error: true
+
+      # ── 2a. Alert on conflict ─────────────────────────────────────────────────
+      - name: Open issue on conflict
+        if: steps.pip_compile.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('pip_compile_output.txt', 'utf8');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Requirements conflict detected',
+              body: [
+                '## Dependency conflict in `requirements.in`',
+                '',
+                `Triggered by commit ${context.sha} (push by @${context.actor}).`,
+                '',
+                'pip-compile could not resolve the dependencies. Full output:',
+                '',
+                '```',
+                output,
+                '```',
+                '',
+                'Please fix `requirements.in` and push again.',
+              ].join('\n'),
+              labels: ['requirements-conflict'],
+            });
+
+      - name: Fail on conflict
+        if: steps.pip_compile.outcome == 'failure'
+        run: |
+          echo "pip-compile failed — see the issue opened above."
+          exit 1
+
+      # ── 2b. Post-process on success ───────────────────────────────────────────
+      - name: Remove self-referential comment lines from detailed_requirements.txt
+        run: |
+          sed -i '/^    #   -r requirements.in/d' detailed_requirements.txt
+
+      - name: Generate requirements.txt
+        run: |
+          grep -v "^[[:space:]]*#" detailed_requirements.txt \
+            | grep -v "^[[:space:]]*$" \
+            | sed 's/\[[^]]*\]//g' \
+            > requirements.txt
+
+      - name: Install compiled packages
+        run: pip install -r requirements.txt
+
+      - name: Generate reverse_dependency.txt
+        run: |
+          grep -v "^#" requirements.txt \
+            | grep -v "^$" \
+            | cut -d'=' -f1 \
+            | xargs -I {} sh -c \
+                'echo "=== {} ===" && pipdeptree --reverse --packages {} 2>/dev/null && echo ""' \
+            > reverse_dependency.txt
+
+      # ── 3. Open PR ────────────────────────────────────────────────────────────
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: auto/update-requirements
+          base: main
+          commit-message: "chore: regenerate requirements files"
+          title: "chore: update requirements files from requirements.in changes"
+          body: |
+            Automated update to the three generated requirements files following
+            changes to `requirements.in` in commit ${{ github.sha }}.
+
+            **Files updated:**
+            - `detailed_requirements.txt` — full pinned dependency graph (pip-compile output)
+            - `requirements.txt` — flat pinned list (comments and extras stripped)
+            - `reverse_dependency.txt` — reverse dependency tree (pipdeptree output)
+
+            Review the diff to confirm the version changes look correct, then merge.
+          delete-branch: true
+          labels: |
+            requirements-update

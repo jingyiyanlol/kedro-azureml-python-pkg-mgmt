@@ -1,0 +1,603 @@
+################################################################################
+# Base Libraries (no upstream dependency/ have cyclic dependency on each other)
+################################################################################
+## Data Processing/ Models Processing
+numpy==1.26.4
+pandas==2.3.2
+scikit-learn==1.7.1
+joblib==1.5.2
+
+## Visualization
+matplotlib==3.9.4
+seaborn==0.13.2
+
+## API Development
+uvicorn==0.35.0
+fastapi==0.128.0
+fastapi-cli==0.0.5
+
+## Azure Client Libraries
+azure-ai-ml==1.31.0
+azure-identity==1.24.0
+azureml-fsspec==1.3.1
+mltable==1.6.1
+
+## Kedro Ecosystem
+kedro==1.3.0
+kedro-azureml==1.0.0
+kedro-boot==0.3.0
+kedro-datasets==9.3.0
+kedro-docker==0.6.0
+kedro-fast-api==0.6.1
+kedro-telemetry==0.7.0
+kedro-viz==11.1.0
+
+## Other MLOps Utilities
+omegaconf==2.3.0
+evidently==0.4.16
+
+## NLP tools
+spacy==3.8.2
+
+## Jupyter ecosystem, kernels, and notebook file manipulation
+notebook==7.4.5
+
+## Development Tools, Testing, and Linting
+portalocker==2.10.1
+    # Easy cross-platform file locking
+pre-commit-hooks==5.0.0
+    # Collection of out-of-the-box hooks for pre-commit
+pytest-cov==6.3.0
+    # Pytest plugin for measuring code coverage
+pytest-mock==2.0.0
+    # Pytest plugin for mocking
+rope==1.13.0
+    # Python refactoring library
+ruff==0.5.7
+    # An extremely fast Python linter and code formatter
+
+## Other General Utilities
+async-timeout==5.0.1
+    # Timeout context manager for asyncio
+email-validator==2.2.0
+    # Robust email address syntax validation
+exceptiongroup==1.3.0
+    # make exception groups render properly when an unhandled exception group is being printed out
+python-multipart==0.0.22
+    # Streaming multipart parser for web applications
+tenacity==9.1.2
+    # General-purpose retrying library
+tomli==2.2.1
+    # A lil' TOML parser
+types-python-dateutil==2.9.0.20250822
+    # Typing stubs for python-dateutil
+watchgod==0.8.2
+    # Simple file watching and code reload
+
+
+#####################################
+# Transitive Libraries
+#####################################
+## Azure / Microsoft Utilities
+adlfs==2023.10.0
+    # Azure Data Lake filesystem implementation for fsspec
+azure-common==1.1.28
+    # Common code and configuration for Azure libraries
+azure-core==1.38.0
+    # Core shared library for Azure SDKs
+azure-datalake-store==0.0.53
+    # Azure Data Lake Store (Gen1) filesystem library
+azure-mgmt-core==1.6.0
+    # Core library for Microsoft Azure Management Client Libraries
+azure-storage-blob==12.27.1
+    # Microsoft Azure Blob Storage Client Library
+azure-storage-file-datalake==12.17.0
+    # Microsoft Azure Data Lake Storage Gen2 Client Library
+azure-storage-file-share==12.19.0
+    # Microsoft Azure File Share Client Library
+azureml-dataprep==5.1.6
+    # Azure Machine Learning Data Prep SDK
+azureml-dataprep-native==41.0.0
+    # Native binaries for Azure ML Data Prep
+azureml-dataprep-rslex==2.22.4
+    # Rust-based engine for Azure ML Data Prep
+msal==1.34.0
+    # Microsoft Authentication Library (MSAL) for Python
+msal-extensions==1.3.1
+    # Extensions for MSAL (e.g., cross-platform token caching)
+msrest==0.7.1
+    # Auto-generated REST Client for Azure
+
+
+## Jupyter ecosystem, kernels, and notebook file manipulation
+comm==0.2.3
+    # Jupyter kernel communication utility
+ipykernel==6.30.1
+    # IPython Kernel for Jupyter
+ipython==8.37.0
+    # Interactive computing environment and enhanced shell
+jupyter-client==8.6.3
+    # Client library for Jupyter protocols
+jupyter-core==5.8.1
+    # Core common functionality for Jupyter projects
+jupyter-events==0.12.0
+    # Event system for Jupyter applications
+jupyter-lsp==2.3.0
+    # Language Server Protocol integration for Jupyter
+jupyter-server==2.17.0
+    # The backend web server for Jupyter applications
+jupyter-server-terminals==0.5.3
+    # Terminal support for Jupyter Server
+jupyterlab==4.4.8
+    # The next-generation user interface for Project Jupyter
+jupyterlab-pygments==0.3.0
+    # Pygments theme for JupyterLab syntax highlighting
+jupyterlab-server==2.27.3
+    # Server components for JupyterLab
+matplotlib-inline==0.1.7
+    # Inline backend for Matplotlib in Jupyter
+nbclient==0.10.2
+    # Client for executing Jupyter Notebooks
+nbconvert==7.17.0
+    # Converting Jupyter Notebooks to other formats (PDF, HTML)
+nbformat==5.10.4
+    # The Jupyter Notebook format API
+notebook-shim==0.2.4
+    # Compatibility layer for transitioning from Notebook to Jupyter Server
+terminado==0.18.1
+    # Terminals in your browser (used by Jupyter)
+traitlets==5.14.3
+    # Configuration system for Python applications (Core Jupyter dependency)
+
+
+## Natural Language Processing (NLP), Processing & Machine Learning
+arrow==1.3.0
+    # Library for creating, manipulating, formatting and converting dates, times and timestamps
+blis==1.3.3
+    # Fast matrix-multiplication library used by spaCy
+catalogue==2.0.10
+    # Tiny function registry for modularizing applications (used by spaCy)
+confection==0.1.5
+    # Configuration system for Python libraries (used by spaCy)
+contourpy==1.3.0
+    # Library for calculating contours of 2D quadrilateral grids
+cycler==0.12.1
+    # Composable style cycles (used by Matplotlib)
+cymem==2.0.11
+    # Memory management helpers for Cython (used by spaCy)
+kiwisolver==1.4.7
+    # Fast implementation of the Cassowary constraint solver
+langcodes==3.4.1
+    # Tools to parse and format standard language codes (BCP 47)
+language-data==1.2.0
+    # Supplementary data for the langcodes library
+murmurhash==1.0.10
+    # Cython bindings for MurmurHash (hashing function)
+networkx==3.5
+    # Library for creating and analyzing complex networks/graphs
+nltk==3.9.4
+    # Natural Language Toolkit for text processing
+patsy==0.5.6
+    # Describing statistical models (used by Statsmodels)
+pillow==12.1.1
+    # Python Imaging Library (Fork) for image processing
+plotly==6.3.0
+    # Interactive graphing library for Python
+preshed==3.0.9
+    # Cython hash table maps (used by spaCy)
+pyarrow==21.0.0
+    # Python library for Apache Arrow (high-performance data memory format)
+pytz==2025.2
+    # Brings the Olson tz database into Python
+scipy==1.16.1
+    # Scientific computing and advanced mathematics
+spacy-legacy==3.0.12
+    # Legacy functions for backwards compatibility in spaCy
+spacy-loggers==1.0.5
+    # Logging utilities for 
+srsly==2.4.8
+    # Modern serialization utilities for spaCy
+statsmodels==0.14.4
+    # Statistical models, hypothesis tests, and data exploration
+thinc==8.3.8
+    # Practical Deep Learning library (NLP focus)
+weasel==0.4.1
+    # Machine learning lifecycle manager
+
+
+## Web, API, and Networking
+aiohappyeyeballs==2.6.1
+    # Happy Eyeballs (RFC 8305) for asyncio
+aiohttp==3.13.5
+    # Asynchronous HTTP client/server framework
+aiosignal==1.4.0
+    # List of registered asynchronous signal handlers
+cross-web==0.4.1
+    # a universal web framework adapter designed to allow developers to write framework-agnostic code
+dnspython==2.8.0
+    # DNS toolkit for Python
+fqdn==1.5.1
+    # Validate Fully Qualified Domain Names (FQDNs)
+graphql-core==3.2.6
+    # Core implementation of GraphQL for Python
+h11==0.16.0
+    # A pure-Python, bring-your-own-I/O implementation of HTTP/1.1
+httpcore==1.0.9
+    # Minimal low-level HTTP client
+httptools==0.6.3
+    # Fast HTTP parser
+httpx==0.28.1
+    # Next-generation HTTP client (sync and async)
+idna==3.11
+    # Internationalized Domain Names in Applications (IDNA)
+litestar==2.17.0
+    # Production-ready ASGI framework (formerly Starlite)
+markupsafe==3.0.3
+    # Safely escapes characters for HTML/XML
+mdurl==0.1.2
+    # URL utilities for Markdown processing
+multidict==6.7.0
+    # Multivalue dictionary implementation (used by aiohttp)
+pyzmq==27.1.0
+    # Python bindings for ZeroMQ messaging library
+pysocks==1.7.1
+    # SOCKS proxy client
+requests==2.33.0
+    # Simple, elegant HTTP library
+starlette==0.50.0
+    # Lightweight ASGI framework / toolkit
+strawberry-graphql==0.312.3
+    # GraphQL library based on Python dataclasses
+tornado==6.5.5
+    # Asynchronous networking library and web server
+uri-template==1.3.0
+    # Implementation of RFC 6570 URI Templates
+urllib3==2.6.3
+    # Powerful, user-friendly HTTP client for Python
+webcolors==24.11.1
+    # Library for working with HTML color names and values
+webencodings==0.5.1
+    # Character encoding aliases for web content
+websockets==14.2
+    # Library for building WebSocket servers and clients
+websocket-client==1.8.0
+    # Low-level WebSocket client for Python
+yarl==1.22.0
+    # Yet another URL library
+
+
+## Data Serialization, Parsing, and Configuration
+annotated-types==0.7.0
+    # Reusable constraint types for data validation
+antlr4-python3-runtime==4.9.3
+    # Runtime for ANTLR 4 parsers
+anyconfig==0.10.1
+    # Provide common APIs to load and dump configuration files in various formats
+beautifulsoup4==4.13.5
+    # Library for screen-scraping and parsing HTML/XML
+chardet==5.2.0
+    # Universal character encoding detector
+charset-normalizer==3.4.4
+    # Fast and modern character encoding detector
+cloudpickle==2.2.1
+    # Extended pickling support for Python objects
+dynaconf==3.2.13
+    # Dynamic configuration management for Python
+fastjsonschema==2.21.2
+    # High-performance JSON schema validation
+fonttools==4.61.0
+    # Tools to manipulate font files
+iniconfig==2.1.0
+    # Brain-dead simple parsing of INI files
+isodate==0.7.2
+    # ISO 8601 date, time and duration parsing
+jinja2==3.1.6
+    # Fast, expressive, extensible templating engine
+json5==0.12.1
+    # Parser for JSON5 (a superset of JSON)
+jsonpointer==3.0.0
+    # Identify specific values in a JSON document
+jsonschema==4.25.1
+    # Implementation of the JSON Schema specification
+jsonschema-specifications==2025.9.1
+    # The JSON Schema meta-schemas and vocabularies
+markdown-it-py==4.0.0
+    # Python port of markdown-it (Markdown parser)
+marshmallow==3.26.2
+    # Simplified object serialization and deserialization
+mistune==3.1.4
+    # Fast markdown parser
+more-itertools==10.7.0
+    # collects additional building blocks, recipes, and routines for working with Python iterables
+msgspec==0.19.0
+    # High-performance JSON and MessagePack library
+orjson==3.11.7
+    # Fast, correct Python JSON library supporting dataclasses/datetimes
+pandocfilters==1.5.1
+    # Utilities for writing pandoc filters in Python
+parse==1.20.2
+    # Parse strings using a format syntax (inverse of format())
+propcache==0.4.1
+    # Accelerated property cache for Python 3.9+
+pydantic==2.10.6
+    # Data validation using Python type hints
+pydantic-core==2.27.2
+    # Core validation logic for Pydantic (written in Rust)
+pygments==2.20.0
+    # Syntax highlighting package
+pyparsing==3.2.0
+    # Library for writing grammars and parsers
+python-dotenv==1.2.1
+    # Read key-value pairs from a .env file and set them as environment variables
+python-slugify==8.0.4
+    # Returns unicode slugs
+pytoolconfig==1.3.1
+    # Manage configuration for Python tools
+pyyaml==6.0.3
+    # YAML parser and emitter
+referencing==0.36.2
+    # Implementation of JSON Schema referencing
+regex==2025.9.18
+    # Alternative regular expression module (re)
+rfc3339-validator==0.1.4
+    # Validate dates against RFC 3339
+rfc3986-validator==0.1.1
+    # Validate URIs against RFC 3986
+rpds-py==0.27.1
+    # Rust persistent data structures (used by jsonschema)
+ruamel-yaml==0.18.6
+    # YAML parser/emitter that supports comments and round-trip
+ruamel-yaml-clib==0.2.12
+    # C version of reader/scanner for ruamel.yaml
+soupsieve==2.8
+    # CSS selector implementation used by BeautifulSoup
+sqlalchemy==2.0.44
+    # SQL Toolkit and Object Relational Mapper (ORM)
+strictyaml==1.7.3
+    # Type-safe YAML parser that parses a restricted subset of YAML
+text-unidecode==1.3
+    # ASCII transliteration of Unicode text
+tinycss2==1.4.0
+    # Low-level CSS parser
+tomli-w==1.2.0
+    # A lil' TOML writer
+typing-extensions==4.15.0
+    # Typing module, providing runtime support for type hints as specified by PEP 484 and subsequent PEPs.
+typing-inspect==0.9.0
+    # Provides tools to inspect type annotations at runtime
+    # via evidently
+tzdata==2025.2
+    # package containing zic-compiled binaries for the IANA time zone database
+
+## Development Tools, Testing, and Linting
+asttokens==3.0.0
+    # Annotate abstract syntax trees (AST) with source text positions
+attrs==25.4.0
+    # for creating well-behaved classes
+build==1.2.1
+    # A simple, correct PEP 517 build frontend
+cookiecutter==2.6.0
+    # A command-line utility that creates projects from templates
+coverage==7.6.4
+    # Code coverage measurement tool
+debugpy==1.8.17
+    # Implementation of the Debug Adapter Protocol for Python (VS Code)
+executing==2.2.1
+    # Get information about what a Python frame is currently doing
+faker==37.8.0
+    # Generates fake data for testing
+gitdb==4.0.12
+    # Git Object Database (used by GitPython)
+gitpython==3.1.45
+    # Python library used to interact with Git repositories
+jedi==0.19.2
+    # Static analysis and autocompletion tool
+mypy-extensions==1.1.0
+    # Experimental type system extensions for mypy
+parso==0.8.5
+    # Python parser (used by Jedi)
+pluggy==1.6.0
+    # Plugin management and hook calling
+polyfactory==2.22.2
+    # Mock data generation factory for Pydantic and dataclasses
+pure-eval==0.2.3
+    # Safely evaluate abstract syntax tree nodes
+pyproject-hooks==1.2.0
+    # Wrappers to call pyproject.toml build backends
+pytest==8.4.2
+    # The pytest framework makes writing small tests easy
+smmap==5.0.2
+    # Slide Memory Map (used by GitPython)
+stack-data==0.6.3
+    # Extract data from stack traces
+
+## System, CLI, and I/O, CLoud Storage, Concurrency
+aiofiles==24.1.0
+    # File support for asyncio (asynchronous file operations)
+anyio==3.7.1
+    # High-level asynchronous compatibility layer
+appdirs==1.4.4
+    # Module for determining appropriate platform-specific user directories
+async-lru==2.0.5
+    # Simple LRU cache for asyncio
+binaryornot==0.4.4
+    # Ultra-lightweight pure Python package to check if a file is binary or text
+cachetools==5.5.2
+    # Extensible memoizing collections and decorators (required by kedro-azureml but not explicit)
+cffi==2.0.0
+    # Foreign Function Interface for Python calling C code
+click==8.3.2
+    # Composable command line interface toolkit
+click-default-group==1.2.4
+    # Extends click to support default commands in groups
+cloudpathlib==0.19.0
+    # Object-oriented path handling for cloud storage (S3, Azure, GCS)
+colorama==0.4.6
+    # Cross-platform colored terminal text
+distro==1.9.0
+    # OS information provider
+filelock==3.20.3
+    # Platform-independent file locking
+fsspec==2023.10.0
+    # Filesystem specification (interface for various storage backends)
+greenlet==3.2.4
+    # Lightweight coroutines for in-process concurrent programming
+importlib-metadata==8.7.0
+    # Read metadata from Python packages
+iterative-telemetry==0.0.8
+    # Telemetry package for Iterative tools
+lazy-loader==0.4
+    # Populate library namespace without incurring immediate import costs
+nest-asyncio==1.6.0
+    # Patch asyncio to allow nested event loops
+packaging==25.0
+    # Core utilities for Python packaging
+pathspec==0.12.1
+    # Utility for pattern matching of file paths (like .gitignore)
+pexpect==4.9.0
+    # Automate interactive console applications (spawn child apps)
+platformdirs==4.5.0
+    # determine platform-specific user directories (config, cache, etc.)
+prompt-toolkit==3.0.52
+    # Library for building powerful interactive command lines
+psutil==7.1.0
+    # Process and system utilities (CPU, memory, disks)
+ptyprocess==0.7.0
+    # Run a subprocess in a pseudo-terminal
+pycparser==2.23
+    # C parser in Python
+pydash==8.0.5
+    # Python utility libraries for doing "stuff" in a functional way
+python-json-logger==3.3.0
+    # JSON log formatter for the standard logging library
+rich==14.1.0
+    # Rich text and beautiful formatting in the terminal
+rich-click==1.9.1
+    # Format click help output nicely with Rich
+send2trash==1.8.3
+    # Send files to the trash/recycle bin instead of permanently deleting
+shellingham==1.5.4
+    # Tool to detect surrounding shell
+smart-open==7.0.4
+    # Stream large files from S3, GCS, Azure, or local
+sniffio==1.3.1
+    # Sniff out which async library your code is running under
+threadpoolctl==3.6.0
+    # Control the thread-pool size of native libraries
+tqdm==4.67.1
+    # Fast, extensible progress bar
+typer==0.12.5
+    # CLI builder based on Python type hints
+uvloop==0.20.0
+    # Ultra fast asyncio event loop
+wasabi==1.1.3
+    # Lightweight console printing and formatting library
+watchdog==5.0.3
+    # Python API and shell utilities to monitor file system events
+watchfiles==0.24.0
+    # Simple, modern and high performance file watching and code reload
+wcwidth==0.2.14
+    # Measures the printable width of string on a terminal
+zipp==3.23.0
+    # Backport of pathlib-compatible Zipfile object
+
+## Security & Cryptography
+argon2-cffi==25.1.0
+    # Secure password hashing algorithm (Argon2) for Python
+argon2-cffi-bindings==25.1.0
+    # Low-level CFFI bindings for Argon2
+bleach==6.2.0
+    # HTML sanitization library to prevent XSS attacks
+certifi==2024.7.4
+    # Python package for providing Mozilla's CA Bundle
+cryptography==46.0.7
+    # Recipes and primitives for cryptography
+defusedxml==0.7.1
+    # XML parsers that prevent XML bomb and DTD attacks
+oauthlib==3.3.1
+    # Generic, spec-compliant implementation of OAuth
+pyjwt==2.12.1
+    # JSON Web Token implementation in Python
+requests-oauthlib==2.0.0
+    # OAuthlib authentication support for Requests
+secure==0.3.0
+    # Lightweight library to add security headers to HTTP responses
+
+## Other General Utilities
+babel==2.17.0
+    # Internationalization (i18n) and localization (l10n) tools
+decorator==5.2.1
+    # Library to simplify the creation of decorators
+frozenlist==1.8.0
+    # list-like structure which implements collections.abc.MutableSequence
+isoduration==20.11.0
+    # Operations with ISO 8601 durations
+marisa-trie==1.2.0
+    # Static memory-efficient Trie data structure
+overrides==7.7.0
+    # Decorator to verify that a method is overriding a parent method
+prometheus-client==0.23.1
+    # Python client for Prometheus monitoring
+semver==2.13.0
+    # Helper for Semantic Versioning
+toposort==1.10
+    # Implements topological sort algorithm
+wrapt==1.17.3
+    # Module for decorators, wrappers, and monkey patching
+
+
+#######################################################################
+# New Transitive libraries previously not in original requirements.txt
+#######################################################################
+annotated-doc==0.0.4
+    # Document parameters, class attributes, return types, and variables inline
+asgiref==3.11.0
+    # ASGI specifications, helper code, and adapters
+azure-core-tracing-opentelemetry==1.0.0b12
+    # OpenTelemetry tracing plugin for the Azure Core library
+azure-monitor-opentelemetry==1.8.5
+    # The Azure Monitor OpenTelemetry Distro
+azure-monitor-opentelemetry-exporter==1.0.0b46
+    # Exports OpenTelemetry data to Azure Monitor
+lark==1.3.1
+    # A modern parsing library for Python
+litestar-htmx==0.5.0
+    # HTMX Integration for Litestar
+multipart==1.3.1
+    # A parser for multipart/form-data
+narwhals==2.15.0
+    # Lightweight compatibility layer for Pandas and Polars
+opentelemetry-api==1.39.0
+    # The OpenTelemetry Python API
+opentelemetry-instrumentation==0.60b0
+    # Base logic for OpenTelemetry instrumentation
+opentelemetry-instrumentation-asgi==0.60b0
+    # Instrumentation for ASGI web applications
+opentelemetry-instrumentation-dbapi==0.60b0
+    # Instrumentation for Database API (DBAPI) compliant adapters
+opentelemetry-instrumentation-django==0.60b0
+    # Instrumentation for the Django web framework
+opentelemetry-instrumentation-fastapi==0.60b0
+    # Instrumentation for the FastAPI web framework
+opentelemetry-instrumentation-flask==0.60b0
+    # Instrumentation for the Flask web framework
+opentelemetry-instrumentation-psycopg2==0.60b0
+    # Instrumentation for the psycopg2 database adapter
+opentelemetry-instrumentation-requests==0.60b0
+    # Instrumentation for the requests library
+opentelemetry-instrumentation-urllib==0.60b0
+    # Instrumentation for the urllib library
+opentelemetry-instrumentation-urllib3==0.60b0
+    # Instrumentation for the urllib3 library
+opentelemetry-instrumentation-wsgi==0.60b0
+    # Instrumentation for WSGI web applications
+opentelemetry-resource-detector-azure==0.1.5
+    # Resource detector for Azure environments
+opentelemetry-sdk==1.39.0
+    # The OpenTelemetry Python SDK
+opentelemetry-semantic-conventions==0.60b0
+    # Standard naming conventions for OpenTelemetry attributes
+opentelemetry-util-http==0.60b0
+    # HTTP utility functions for OpenTelemetry instrumentation
+rfc3987-syntax==1.1.0
+    # Validation and parsing of RFC 3987 IRIs and URIs
