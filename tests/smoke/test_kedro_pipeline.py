@@ -47,4 +47,5 @@ def test_pipeline_runs_locally():
     catalog = DataCatalog({"raw": MemoryDataset(5)})
     output = SequentialRunner().run(pipeline, catalog)
 
-    assert output["result"] == 11  # (5 * 2) + 1
+    # Extract the actual value from the MemoryDataset
+    assert output["result"].load() == 11  # (5 * 2) + 1
