@@ -3,7 +3,6 @@
 # by the following command:
 #
 #    pip-compile --output-file=detailed_requirements.txt requirements.in
-#    sed -i '/^    #   -r requirements.in/d' detailed_requirements.txt
 #
 adlfs==2023.10.0
     # via
@@ -156,8 +155,7 @@ build==1.2.1
     # via
     #   kedro
 cachetools==5.5.2
-    # via
-    #   kedro-azureml # runtime-override: required by kedro-azureml but not captured by pip-compile
+    # via -r requirements.in
 catalogue==2.0.10
     # via
     #   spacy
