@@ -240,6 +240,7 @@ multidict==6.7.0
 pyzmq==27.1.0
     # Python bindings for ZeroMQ messaging library
 pysocks==1.7.1
+    # runtime-override: previously detected as transitive via requests==2.32.5 but not detected with requests==2.33.0
     # SOCKS proxy client
 requests==2.33.0
     # Simple, elegant HTTP library
@@ -422,7 +423,8 @@ async-lru==2.0.5
 binaryornot==0.4.4
     # Ultra-lightweight pure Python package to check if a file is binary or text
 cachetools==5.5.2
-    # Extensible memoizing collections and decorators (required by kedro-azureml but not explicit)
+    # runtime-override: needed by kedro-azureml at runtime, not detected by pip-compile
+    # Extensible memoizing collections and decorators
 cffi==2.0.0
     # Foreign Function Interface for Python calling C code
 click==8.3.2
