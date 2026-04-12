@@ -28,6 +28,8 @@ Usage:
 """
 
 import argparse
+import importlib.metadata
+import pathlib
 import re
 import sys
 
@@ -141,6 +143,75 @@ def parse_req_in(path: str) -> tuple[set[str], set[str], dict[str, bool]]:
 
 
 # ---------------------------------------------------------------------------
+# Runtime-usage scanning
+# ---------------------------------------------------------------------------
+
+def get_top_level_modules(pkg_name: str) -> list[str]:
+    """Return the importable top-level module names for an installed package.
+
+    Reads the dist-info ``top_level.txt`` when present; falls back to
+    replacing hyphens with underscores in the distribution name.
+    """
+    try:
+        dist = importlib.metadata.distribution(pkg_name)
+        top_level = dist.read_text("top_level.txt")
+        if top_level:
+            return [m.strip() for m in top_level.strip().splitlines() if m.strip()]
+    except importlib.metadata.PackageNotFoundError:
+        pass
+    return [pkg_name.replace("-", "_")]
+
+
+def scan_runtime_usage(orphans: list[str]) -> dict[str, list[str]]:
+    """Scan every installed package's Python source for imports of each orphan.
+
+    Uses simple substring matching (``import <module>`` / ``from <module>``)
+    which is fast and catches both direct and lazy imports.
+
+    Returns ``{orphan_name: [pkg_name_that_imports_it, ...]}``.  Only packages
+    that import the orphan *without* declaring it as a metadata dependency are
+    surfaced — exactly the cases pip-compile misses.
+    """
+    if not orphans:
+        return {}
+
+    orphan_set = set(orphans)
+
+    # Build needle strings for each orphan based on its importable module names
+    orphan_needles: dict[str, list[str]] = {}
+    for orphan in orphans:
+        mods = get_top_level_modules(orphan)
+        orphan_needles[orphan] = [f"import {m}" for m in mods] + [f"from {m}" for m in mods]
+
+    results: dict[str, list[str]] = {o: [] for o in orphans}
+
+    for dist in importlib.metadata.distributions():
+        raw_name = (dist.metadata.get("Name") or "").strip()
+        if not raw_name:
+            continue
+        dist_name = _norm(raw_name)
+        if dist_name in orphan_set:
+            continue  # don't let an orphan "import itself"
+
+        files = dist.files or []
+        py_files = [dist.locate_file(f) for f in files if str(f).endswith(".py")]
+
+        for orphan, needles in orphan_needles.items():
+            if dist_name in results[orphan]:
+                continue  # already recorded this importer
+            for py_path in py_files:
+                try:
+                    content = pathlib.Path(py_path).read_text(errors="replace")
+                except OSError:
+                    continue
+                if any(needle in content for needle in needles):
+                    results[orphan].append(dist_name)
+                    break  # one match per dist is enough
+
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Audit 1: Orphan candidates
 # ---------------------------------------------------------------------------
 
@@ -197,7 +268,11 @@ def find_new_packages(
 # Report formatting
 # ---------------------------------------------------------------------------
 
-def write_orphan_report(orphans: list[str], out_path: str) -> None:
+def write_orphan_report(
+    orphans: list[str],
+    out_path: str,
+    runtime_usage: dict[str, list[str]] | None = None,
+) -> None:
     lines: list[str] = []
     if not orphans:
         lines.append("No orphan candidates found.")
@@ -208,11 +283,35 @@ def write_orphan_report(orphans: list[str], out_path: str) -> None:
         )
         for p in orphans:
             lines.append(f"  - {p}")
+            if runtime_usage is not None:
+                importers = sorted(runtime_usage.get(p, []))
+                if importers:
+                    lines.append(
+                        f"    Suggestion: POSSIBLY NEEDED — imported at runtime by: "
+                        + ", ".join(importers)
+                    )
+                    lines.append(
+                        f"    Action: add '# runtime-override: imported by "
+                        + importers[0]
+                        + " at runtime' to requirements.in"
+                    )
+                else:
+                    lines.append(
+                        "    Suggestion: SAFE TO REMOVE — no installed package imports it"
+                    )
+                    lines.append("    Action: remove from requirements.in")
         lines.append("")
-        lines.append(
-            "Consider removing them from requirements.in or adding "
-            "'# runtime-override: <reason>' if they are needed at runtime."
-        )
+        if runtime_usage is not None:
+            lines.append(
+                "Packages marked 'SAFE TO REMOVE' can be deleted from requirements.in. "
+                "Packages marked 'POSSIBLY NEEDED' should be tagged with "
+                "'# runtime-override: <reason>' to suppress this warning."
+            )
+        else:
+            lines.append(
+                "Consider removing them from requirements.in or adding "
+                "'# runtime-override: <reason>' if they are needed at runtime."
+            )
     with open(out_path, "w") as f:
         f.write("\n".join(lines) + "\n")
 
@@ -259,6 +358,15 @@ def main() -> None:
     parser.add_argument("--old-detailed", default=None)
     parser.add_argument("--orphan-out", default="orphan_report.txt")
     parser.add_argument("--new-pkg-out", default="new_packages_report.txt")
+    parser.add_argument(
+        "--scan-runtime",
+        action="store_true",
+        help=(
+            "Scan installed packages' Python source files for imports of each orphan "
+            "and annotate the report with SAFE TO REMOVE / POSSIBLY NEEDED suggestions. "
+            "Requires the packages in requirements.txt to already be installed."
+        ),
+    )
     args = parser.parse_args()
 
     detailed = parse_detailed(args.detailed)
@@ -270,7 +378,9 @@ def main() -> None:
         detailed, base_pkgs, transitive_pkgs, old_detailed
     )
 
-    write_orphan_report(orphans, args.orphan_out)
+    runtime_usage = scan_runtime_usage(orphans) if args.scan_runtime else None
+
+    write_orphan_report(orphans, args.orphan_out, runtime_usage)
     write_new_pkg_report(untracked, newly_added, args.new_pkg_out)
 
     # Print summaries to stdout for CI logs

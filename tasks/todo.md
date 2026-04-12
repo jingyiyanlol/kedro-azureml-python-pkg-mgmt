@@ -101,3 +101,52 @@ No application code was changed.
 **`README.md`** (updated)
 - Documents the orphan detection, `# runtime-override:` convention,
   new-package detection, and smoke test in new sections
+
+---
+
+# Orphan Runtime-Usage Scanning
+
+## Plan
+
+Enhance the orphan report to suggest whether each orphan is safe to remove or
+possibly still needed at runtime, by scanning the installed packages' Python
+source files for imports of the orphan's module(s).
+
+- After `pip install`, use `importlib.metadata` to walk every installed
+  distribution's `.py` files and search for `import <module>` / `from <module>`
+  needle strings.
+- If any installed package imports an orphan without declaring it as a metadata
+  dependency (the case pip-compile misses), flag the orphan as
+  **POSSIBLY NEEDED** and list the importers.
+- If no package imports it, flag it as **SAFE TO REMOVE**.
+- Wire into the workflow by moving the audit step to after `pip install` and
+  passing `--scan-runtime`.
+
+## Checklist
+
+- [x] Add `get_top_level_modules()` and `scan_runtime_usage()` to `audit_requirements.py`
+- [x] Add `--scan-runtime` CLI flag; update `write_orphan_report()` with suggestions
+- [x] Move audit step after pip install in workflow; add `--scan-runtime` flag
+
+## Review
+
+### Changes made
+
+**`scripts/audit_requirements.py`** (updated)
+- `get_top_level_modules(pkg_name)` — resolves a distribution name to its
+  importable module names via `top_level.txt`; falls back to replacing hyphens
+  with underscores
+- `scan_runtime_usage(orphans)` — walks every installed distribution's `.py`
+  files looking for `import <module>` / `from <module>` needle strings; returns
+  `{orphan: [importer_pkg, ...]}` for packages that import the orphan without
+  declaring it as a metadata dependency
+- `write_orphan_report()` — now accepts an optional `runtime_usage` dict and
+  annotates each orphan with either `SAFE TO REMOVE` (no importer found) or
+  `POSSIBLY NEEDED` (lists which packages import it) plus a concrete action
+- `main()` — new `--scan-runtime` flag gates the scan; passes `runtime_usage`
+  to the report writer when enabled
+
+**`.github/workflows/update-requirements.yml`** (updated)
+- Moved `pip install -r requirements.txt` before the audit step so site-packages
+  are populated when `--scan-runtime` runs
+- Added `--scan-runtime` to the audit step's command

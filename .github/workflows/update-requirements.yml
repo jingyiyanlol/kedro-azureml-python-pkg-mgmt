@@ -99,22 +99,23 @@ jobs:
             | sed 's/\[[^]]*\]//g' \
             > requirements.txt
 
-      # ── 3. Audit ──────────────────────────────────────────────────────────────
+      # ── 3. Install ────────────────────────────────────────────────────────────
+      - name: Install compiled packages
+        run: pip install -r requirements.txt
+
+      # ── 4. Audit (after install so --scan-runtime can inspect site-packages) ─
       - name: Run requirements audit
         id: audit
         run: |
           python scripts/audit_requirements.py \
-            --detailed  detailed_requirements.txt \
-            --req-in    requirements.in \
+            --detailed     detailed_requirements.txt \
+            --req-in       requirements.in \
             --old-detailed detailed_requirements_old.txt \
             --orphan-out   orphan_report.txt \
-            --new-pkg-out  new_packages_report.txt
+            --new-pkg-out  new_packages_report.txt \
+            --scan-runtime
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
         continue-on-error: true
-
-      # ── 4. Install + smoke test ───────────────────────────────────────────────
-      - name: Install compiled packages
-        run: pip install -r requirements.txt
 
       - name: Run kedro smoke tests
         id: smoke_test
