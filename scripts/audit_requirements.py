@@ -43,6 +43,10 @@ def _norm(name: str) -> str:
     return re.sub(r"[_.]", "-", name.strip().lower())
 
 
+# ---------------------------------------------------------------------------
+# Parse pip-compile output
+# ---------------------------------------------------------------------------
+
 def parse_detailed(path: str) -> dict[str, str]:
     """
     Parse a pip-compile output file.
@@ -62,16 +66,23 @@ def parse_detailed(path: str) -> dict[str, str]:
     # or the compact form:
     #   pkgname==version
     #       # via -r requirements.in
+
     block_re = re.compile(
         r"^([A-Za-z0-9][\w.\-]*(?:\[[^\]]*\])?)==[^\n]+\n((?:[ \t]+#[^\n]*\n?)*)",
         re.MULTILINE,
     )
+
     for m in block_re.finditer(content):
         raw_name = re.sub(r"\[.*\]", "", m.group(1))
         via_block = m.group(2)
         packages[_norm(raw_name)] = via_block
+
     return packages
 
+
+# ---------------------------------------------------------------------------
+# Parse requirements.in (Tailored for this requirements.in format only)
+# ---------------------------------------------------------------------------
 
 def parse_req_in(path: str) -> tuple[set[str], set[str], dict[str, bool]]:
     """
@@ -97,46 +108,57 @@ def parse_req_in(path: str) -> tuple[set[str], set[str], dict[str, bool]]:
         nonlocal current_pkg, is_override
         if current_pkg is None:
             return
+
+        # record override regardless of section
+        if is_override:
+            overrides[current_pkg] = True
+
         if section == "transitive":
             transitive_pkgs.add(current_pkg)
-            if is_override:
-                overrides[current_pkg] = True
         else:
             base_pkgs.add(current_pkg)
+
         current_pkg = None
         is_override = False
 
     for line in lines:
-        stripped = line.rstrip()
-
-        # Section header detection
+        stripped = line.strip()
         upper = stripped.upper()
+
+        # ---- MAJOR SECTION HEADERS ----
         if "BASE LIBRARIES" in upper:
             _save_current()
             section = "base"
             continue
+
         if "TRANSITIVE" in upper:
             _save_current()
             section = "transitive"
             continue
 
-        # Skip pure comment / blank lines that aren't package annotations
-        if not stripped or (stripped.lstrip().startswith("#") and not stripped[0].isalpha()):
-            # Could be an annotation for current_pkg
+        # ---- DECORATIVE SEPARATORS (#####) ----
+        if stripped.startswith("#") and set(stripped) <= {"#"}:
+            continue
+
+        # ---- SUBSECTION HEADERS (## ...) ----
+        if stripped.startswith("##"):
+            continue
+
+        # ---- BLANK ----
+        if not stripped:
+            continue
+
+        # ---- COMMENT (package annotation) ----
+        if stripped.startswith("#"):
             if current_pkg and "runtime-override" in stripped.lower():
                 is_override = True
             continue
 
-        # Package line: starts with a letter (not indented)
-        if stripped[0].isalpha() or stripped[0].isdigit():
-            _save_current()
-            raw = re.split(r"[=\[]", stripped)[0].strip()
-            current_pkg = _norm(raw)
-            is_override = False
-        elif stripped.startswith(" ") and current_pkg:
-            # Indented annotation line for the current package
-            if "runtime-override" in stripped.lower():
-                is_override = True
+        # ---- PACKAGE LINE ----
+        _save_current()
+        raw = re.split(r"[=\[]", stripped)[0].strip()
+        current_pkg = _norm(raw)
+        is_override = False
 
     _save_current()
     return base_pkgs, transitive_pkgs, overrides
@@ -148,7 +170,6 @@ def parse_req_in(path: str) -> tuple[set[str], set[str], dict[str, bool]]:
 
 def get_top_level_modules(pkg_name: str) -> list[str]:
     """Return the importable top-level module names for an installed package.
-
     Reads the dist-info ``top_level.txt`` when present; falls back to
     replacing hyphens with underscores in the distribution name.
     """
@@ -164,10 +185,8 @@ def get_top_level_modules(pkg_name: str) -> list[str]:
 
 def scan_runtime_usage(orphans: list[str]) -> dict[str, list[str]]:
     """Scan every installed package's Python source for imports of each orphan.
-
     Uses simple substring matching (``import <module>`` / ``from <module>``)
     which is fast and catches both direct and lazy imports.
-
     Returns ``{orphan_name: [pkg_name_that_imports_it, ...]}``.  Only packages
     that import the orphan *without* declaring it as a metadata dependency are
     surfaced — exactly the cases pip-compile misses.
@@ -181,7 +200,10 @@ def scan_runtime_usage(orphans: list[str]) -> dict[str, list[str]]:
     orphan_needles: dict[str, list[str]] = {}
     for orphan in orphans:
         mods = get_top_level_modules(orphan)
-        orphan_needles[orphan] = [f"import {m}" for m in mods] + [f"from {m}" for m in mods]
+        orphan_needles[orphan] = (
+            [f"import {m}" for m in mods] +
+            [f"from {m}" for m in mods]
+        )
 
     results: dict[str, list[str]] = {o: [] for o in orphans}
 
@@ -189,6 +211,7 @@ def scan_runtime_usage(orphans: list[str]) -> dict[str, list[str]]:
         raw_name = (dist.metadata.get("Name") or "").strip()
         if not raw_name:
             continue
+
         dist_name = _norm(raw_name)
         if dist_name in orphan_set:
             continue  # don't let an orphan "import itself"
@@ -198,12 +221,14 @@ def scan_runtime_usage(orphans: list[str]) -> dict[str, list[str]]:
 
         for orphan, needles in orphan_needles.items():
             if dist_name in results[orphan]:
-                continue  # already recorded this importer
+                continue # already recorded this importer
+
             for py_path in py_files:
                 try:
                     content = pathlib.Path(py_path).read_text(errors="replace")
                 except OSError:
                     continue
+
                 if any(needle in content for needle in needles):
                     results[orphan].append(dist_name)
                     break  # one match per dist is enough
@@ -225,15 +250,33 @@ def find_orphans(
     '-r requirements.in' and that are not marked runtime-override.
     """
     orphans = []
+
     for pkg in transitive_pkgs:
         if pkg not in detailed:
             continue
+
         via = detailed[pkg]
-        # After the sed strip, a package with ONLY -r requirements.in as its
-        # source shows the compact single-line form:  "    # via -r requirements.in"
-        if "via -r requirements.in" in via and "via\n" not in via:
+
+        # Extract sources from via block
+        lines = [
+            l.strip()
+            for l in via.strip().splitlines()
+            if l.strip().startswith("#")
+        ]
+
+        sources = []
+        for l in lines:
+            l = l.lstrip("#").strip()
+            if l.startswith("via"):
+                continue
+            sources.append(l)
+
+        sources = [s.strip() for s in sources if s.strip()]
+
+        if sources == ["-r requirements.in"]:
             if not overrides.get(pkg):
                 orphans.append(pkg)
+
     return sorted(orphans)
 
 
@@ -256,7 +299,7 @@ def find_new_packages(
     all_req_in = base_pkgs | transitive_pkgs
     untracked = sorted(p for p in detailed if p not in all_req_in)
 
-    if old_detailed is not None:
+    if old_detailed:
         newly_added = sorted(p for p in untracked if p not in old_detailed)
     else:
         newly_added = []
