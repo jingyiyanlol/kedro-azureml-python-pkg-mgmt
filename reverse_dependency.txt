@@ -3683,7 +3683,7 @@ pexpect==4.9.0
     └── kedro-viz==11.1.0 [requires: ipython>=7.0.0,<9.0]
 
 === pillow ===
-pillow==12.1.1
+pillow==12.2.0
 └── matplotlib==3.9.4 [requires: pillow>=8]
     └── seaborn==0.13.2 [requires: matplotlib>=3.4,!=3.6.1]
 
