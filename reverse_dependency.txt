@@ -5462,9 +5462,6 @@ tomli_w==1.2.0
     │   └── kedro-azureml==1.0.0 [requires: kedro-datasets>=1.0.0]
     └── kedro-docker==0.6.0 [requires: kedro>=0.16.0]
 
-=== toposort ===
-toposort==1.10
-
 === tornado ===
 tornado==6.5.5
 ├── jupyterlab==4.4.8 [requires: tornado>=6.2.0]
