@@ -1,6 +1,9 @@
 Orphan candidates — in 'Transitive Libraries' of requirements.in but pip-compile cannot trace them to any upstream package:
-  - cachetools
   - pysocks
+    Suggestion: POSSIBLY NEEDED — imported at runtime by: httpcore, httpx, pip, urllib3
+    Action: add '# runtime-override: imported by httpcore at runtime' to requirements.in
   - toposort
+    Suggestion: SAFE TO REMOVE — no installed package imports it
+    Action: remove from requirements.in
 
-Consider removing them from requirements.in or adding '# runtime-override: <reason>' if they are needed at runtime.
+Packages marked 'SAFE TO REMOVE' can be deleted from requirements.in. Packages marked 'POSSIBLY NEEDED' should be tagged with '# runtime-override: <reason>' to suppress this warning.
