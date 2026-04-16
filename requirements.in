@@ -178,7 +178,7 @@ nltk==3.9.4
     # Natural Language Toolkit for text processing
 patsy==0.5.6
     # Describing statistical models (used by Statsmodels)
-pillow==12.1.1
+pillow==12.2.0
     # Python Imaging Library (Fork) for image processing
 plotly==6.3.0
     # Interactive graphing library for Python
