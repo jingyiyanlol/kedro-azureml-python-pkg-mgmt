@@ -823,7 +823,7 @@ pyproject-hooks==1.2.0
     #   build
 pysocks==1.7.1
     # via -r requirements.in
-pytest==8.4.2
+pytest==9.0.3
     # via
     #   pytest-cov
     #   pytest-mock
@@ -846,7 +846,7 @@ python-dotenv==1.2.1
 python-json-logger==3.3.0
     # via
     #   jupyter-events
-python-multipart==0.0.22
+python-multipart==0.0.26
     # via -r requirements.in
 python-slugify==8.0.4
     # via
