@@ -545,7 +545,7 @@ narwhals==2.15.0
 nbclient==0.10.2
     # via
     #   nbconvert
-nbconvert==7.17.0
+nbconvert==7.17.1
     # via
     #   jupyter-server
 nbformat==5.10.4
@@ -840,7 +840,7 @@ python-dateutil==2.9.0.post0
     #   pandas
     #   strawberry-graphql
     #   strictyaml
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # via
     #   uvicorn
 python-json-logger==3.3.0
