@@ -123,7 +123,7 @@ python scripts/audit_requirements.py \
 
 The workflow (`.github/workflows/update-requirements.yml`) triggers on any push to `main` that changes `requirements.in`.
 
-Required repository permissions (automatically granted via `GITHUB_TOKEN`):
+Required repository permissions (To create a PAT and store in secrets for the repository, called with `secrets.WORKFLOW_PAT`):
 - `contents: write` — commit generated files to a branch
 - `pull-requests: write` — open the PR
 - `issues: write` — open a conflict Issue
