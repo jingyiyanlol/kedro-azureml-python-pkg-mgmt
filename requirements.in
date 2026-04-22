@@ -137,7 +137,7 @@ matplotlib-inline==0.1.7
     # Inline backend for Matplotlib in Jupyter
 nbclient==0.10.2
     # Client for executing Jupyter Notebooks
-nbconvert==7.17.0
+nbconvert==7.17.1
     # Converting Jupyter Notebooks to other formats (PDF, HTML)
 nbformat==5.10.4
     # The Jupyter Notebook format API
@@ -327,7 +327,7 @@ pygments==2.20.0
     # Syntax highlighting package
 pyparsing==3.2.0
     # Library for writing grammars and parsers
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # Read key-value pairs from a .env file and set them as environment variables
 python-slugify==8.0.4
     # Returns unicode slugs
