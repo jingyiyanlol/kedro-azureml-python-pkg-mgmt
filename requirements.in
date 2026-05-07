@@ -131,7 +131,7 @@ jupyterlab==4.4.8
     # The next-generation user interface for Project Jupyter
 jupyterlab-pygments==0.3.0
     # Pygments theme for JupyterLab syntax highlighting
-jupyterlab-server==2.27.3
+jupyterlab-server==2.28.0
     # Server components for JupyterLab
 matplotlib-inline==0.1.7
     # Inline backend for Matplotlib in Jupyter
