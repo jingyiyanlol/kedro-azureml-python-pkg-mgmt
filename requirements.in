@@ -13,14 +13,14 @@ seaborn==0.13.2
 
 ## API Development
 uvicorn==0.35.0
-fastapi==0.128.0
+fastapi==0.136.3
 fastapi-cli==0.0.5
 
 ## Azure Client Libraries
 azure-ai-ml==1.31.0
-azure-identity==1.24.0
+azure-identity==1.25.3
 azureml-fsspec==1.3.1
-mltable==1.6.1
+mltable==1.6.3
 
 ## Kedro Ecosystem
 kedro==1.3.0
@@ -40,7 +40,7 @@ evidently==0.4.16
 spacy==3.8.2
 
 ## Jupyter ecosystem, kernels, and notebook file manipulation
-notebook==7.5.6
+notebook==7.6.0
 
 ## Development Tools, Testing, and Linting
 portalocker==2.10.1
@@ -63,7 +63,7 @@ email-validator==2.2.0
     # Robust email address syntax validation
 exceptiongroup==1.3.0
     # make exception groups render properly when an unhandled exception group is being printed out
-python-multipart==0.0.28
+python-multipart==0.0.32
     # Streaming multipart parser for web applications
 tenacity==9.1.2
     # General-purpose retrying library
@@ -92,7 +92,7 @@ azure-storage-blob==12.27.1
     # Microsoft Azure Blob Storage Client Library
 azure-storage-file-datalake==12.17.0
     # Microsoft Azure Data Lake Storage Gen2 Client Library
-azure-storage-file-share==12.19.0
+azure-storage-file-share==12.26.0
     # Microsoft Azure File Share Client Library
 azureml-dataprep==5.1.6
     # Azure Machine Learning Data Prep SDK
@@ -100,7 +100,7 @@ azureml-dataprep-native==41.0.0
     # Native binaries for Azure ML Data Prep
 azureml-dataprep-rslex==2.22.4
     # Rust-based engine for Azure ML Data Prep
-msal==1.34.0
+msal==1.37.0
     # Microsoft Authentication Library (MSAL) for Python
 msal-extensions==1.3.1
     # Extensions for MSAL (e.g., cross-platform token caching)
@@ -123,11 +123,11 @@ jupyter-events==0.12.0
     # Event system for Jupyter applications
 jupyter-lsp==2.3.0
     # Language Server Protocol integration for Jupyter
-jupyter-server==2.18.2
+jupyter-server==2.20.0
     # The backend web server for Jupyter applications
 jupyter-server-terminals==0.5.3
     # Terminal support for Jupyter Server
-jupyterlab==4.5.7
+jupyterlab==4.6.0
     # The next-generation user interface for Project Jupyter
 jupyterlab-pygments==0.3.0
     # Pygments theme for JupyterLab syntax highlighting
@@ -184,7 +184,7 @@ plotly==6.3.0
     # Interactive graphing library for Python
 preshed==3.0.9
     # Cython hash table maps (used by spaCy)
-pyarrow==21.0.0
+pyarrow==24.0.0
     # Python library for Apache Arrow (high-performance data memory format)
 pytz==2025.2
     # Brings the Olson tz database into Python
@@ -207,11 +207,10 @@ weasel==0.4.1
 ## Web, API, and Networking
 aiohappyeyeballs==2.6.1
     # Happy Eyeballs (RFC 8305) for asyncio
-aiohttp==3.13.5
-    # Asynchronous HTTP client/server framework
+aiohttp==3.14.1    # Asynchronous HTTP client/server framework
 aiosignal==1.4.0
     # List of registered asynchronous signal handlers
-cross-web==0.4.1
+cross-web==0.7.0
     # a universal web framework adapter designed to allow developers to write framework-agnostic code
 dnspython==2.8.0
     # DNS toolkit for Python
@@ -227,9 +226,9 @@ httptools==0.6.3
     # Fast HTTP parser
 httpx==0.28.1
     # Next-generation HTTP client (sync and async)
-idna==3.11
+idna==3.16
     # Internationalized Domain Names in Applications (IDNA)
-litestar==2.21.1
+litestar==2.24.0
     # Production-ready ASGI framework (formerly Starlite)
 markupsafe==3.0.3
     # Safely escapes characters for HTML/XML
@@ -244,11 +243,11 @@ pysocks==1.7.1
     # SOCKS proxy client
 requests==2.33.0
     # Simple, elegant HTTP library
-starlette==0.50.0
+starlette==1.3.1
     # Lightweight ASGI framework / toolkit
-strawberry-graphql==0.312.3
+strawberry-graphql==0.316.0
     # GraphQL library based on Python dataclasses
-tornado==6.5.5
+tornado==6.5.7
     # Asynchronous networking library and web server
 uri-template==1.3.0
     # Implementation of RFC 6570 URI Templates
@@ -366,6 +365,8 @@ typing-extensions==4.15.0
 typing-inspect==0.9.0
     # Provides tools to inspect type annotations at runtime
     # via evidently
+typing-inspection==0.4.2
+    # comes from the newest pydantic which is a requirement of fastapi following 25/5/2026
 tzdata==2025.2
     # package containing zic-compiled binaries for the IANA time zone database
 
@@ -507,17 +508,17 @@ argon2-cffi==25.1.0
     # Secure password hashing algorithm (Argon2) for Python
 argon2-cffi-bindings==25.1.0
     # Low-level CFFI bindings for Argon2
-bleach==6.3.0
+bleach==6.4.0
     # HTML sanitization library to prevent XSS attacks
 certifi==2024.7.4
     # Python package for providing Mozilla's CA Bundle
-cryptography==46.0.7
+cryptography==49.0.0
     # Recipes and primitives for cryptography
 defusedxml==0.7.1
     # XML parsers that prevent XML bomb and DTD attacks
 oauthlib==3.3.1
     # Generic, spec-compliant implementation of OAuth
-pyjwt==2.12.1
+pyjwt==2.13.0
     # JSON Web Token implementation in Python
 requests-oauthlib==2.0.0
     # OAuthlib authentication support for Requests

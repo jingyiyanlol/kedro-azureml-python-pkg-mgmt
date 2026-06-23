@@ -1,1 +1,4 @@
-All resolved packages are already listed in requirements.in.
+1 package(s) resolved by pip-compile are not listed in requirements.in:
+  - jupyter-builder
+
+Add them to the appropriate 'Transitive Libraries' section of requirements.in to make the dependency explicit.
